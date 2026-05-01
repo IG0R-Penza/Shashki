@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 namespace Shashki
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         private PictureBox[,] cellReferences = new PictureBox[8, 8];
 
@@ -18,12 +18,12 @@ namespace Shashki
         }
         private CellState[,] board;// = new CellState[8, 8];
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void MainForm_Load(object sender, EventArgs e)
         {
             if (BoardTable == null) return;
 
@@ -89,7 +89,6 @@ namespace Shashki
                 for (int col = 0; col < 8; col++)
                 {
                     var cell = board[row, col];
-                    //var visualCell = (PictureBox)BoardTable.GetControlFromPosition(col, row);
                     var visualCell = cellReferences[row, col];
                     if ((row + col) % 2 == 0)
                     {
@@ -114,10 +113,11 @@ namespace Shashki
             }
         }
 
-        private void Form1_Resize(object sender, EventArgs e)
+        private void MainForm_Resize(object sender, EventArgs e)
         {
-            int minSize = Math.Min(this.ClientSize.Width-BoardTable.Location.X-200, this.ClientSize.Height-BoardTable.Location.Y-60)/8*8;
+            int minSize = Math.Min(this.Size.Width - 104, this.Size.Height - 120) / 8 * 8;
             BoardTable.Size = new Size(minSize, minSize);
+            BoardTable.Location = new Point((this.ClientSize.Width - minSize) / 2, 20);
         }
     }
 }
