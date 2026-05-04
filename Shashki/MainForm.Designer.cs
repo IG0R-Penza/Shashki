@@ -31,7 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.BoardTable = new System.Windows.Forms.TableLayoutPanel();
             this.GameControlBtn = new System.Windows.Forms.Button();
-            this.HodBtn = new System.Windows.Forms.Button();
             this.InfoLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
@@ -66,6 +65,7 @@
             // GameControlBtn
             // 
             this.GameControlBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.GameControlBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.GameControlBtn.Location = new System.Drawing.Point(52, 435);
             this.GameControlBtn.Name = "GameControlBtn";
             this.GameControlBtn.Size = new System.Drawing.Size(117, 34);
@@ -73,23 +73,14 @@
             this.GameControlBtn.Text = "Начать игру";
             this.GameControlBtn.UseVisualStyleBackColor = true;
             // 
-            // HodBtn
-            // 
-            this.HodBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.HodBtn.Location = new System.Drawing.Point(335, 435);
-            this.HodBtn.Name = "HodBtn";
-            this.HodBtn.Size = new System.Drawing.Size(117, 34);
-            this.HodBtn.TabIndex = 2;
-            this.HodBtn.Text = "Завершить ход";
-            this.HodBtn.UseVisualStyleBackColor = true;
-            // 
             // InfoLabel
             // 
             this.InfoLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.InfoLabel.AutoSize = true;
-            this.InfoLabel.Location = new System.Drawing.Point(190, 446);
+            this.InfoLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.InfoLabel.Location = new System.Drawing.Point(228, 443);
             this.InfoLabel.Name = "InfoLabel";
-            this.InfoLabel.Size = new System.Drawing.Size(0, 13);
+            this.InfoLabel.Size = new System.Drawing.Size(0, 18);
             this.InfoLabel.TabIndex = 3;
             // 
             // MainForm
@@ -98,7 +89,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(504, 481);
             this.Controls.Add(this.InfoLabel);
-            this.Controls.Add(this.HodBtn);
             this.Controls.Add(this.GameControlBtn);
             this.Controls.Add(this.BoardTable);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -116,7 +106,6 @@
 
         private System.Windows.Forms.TableLayoutPanel BoardTable;
         private System.Windows.Forms.Button GameControlBtn;
-        private System.Windows.Forms.Button HodBtn;
         private System.Windows.Forms.Label InfoLabel;
     }
 }

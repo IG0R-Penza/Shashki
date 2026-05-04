@@ -8,15 +8,9 @@ namespace Shashki
     {
         private PictureBox[,] cellReferences = new PictureBox[8, 8];
 
-        public enum PieceType { None, Man, King }
-        public enum PlayerColor { None, White, Black }
+        private Game game;
 
-        public class CellState
-        {
-            public PieceType Type { get; set; } = PieceType.None;
-            public PlayerColor Color { get; set; } = PlayerColor.None;
-        }
-        private CellState[,] board;// = new CellState[8, 8];
+        private Point SelectedCell = new Point(-1, -1);
 
         public MainForm()
         {
@@ -38,7 +32,7 @@ namespace Shashki
                         Margin = new Padding(0),
                         Padding = new Padding(0),
                         SizeMode = PictureBoxSizeMode.StretchImage,
-                        BackColor = Color.Transparent,
+                        BackColor = System.Drawing.Color.Transparent,
                         Tag = new Point(j, i)
                         //Image = image
                     };
@@ -48,28 +42,14 @@ namespace Shashki
                 }
             }
 
-
-            board = new CellState[8, 8];
-            for (int i = 0; i < 8; i++)
-            {
-                for (int j = 0; j < 8; j++)
-                {
-                    board[i, j] = new CellState();
-                    if ((i+j)%2 != 0)
-                    {
-                        if (i < 3)
-                        {
-                            board[i, j].Color = PlayerColor.Black;
-                            board[i, j].Type = PieceType.Man;
-                        }
-                        else if (i > 4)
-                        {
-                            board[i, j].Color = PlayerColor.White;
-                            board[i, j].Type = PieceType.Man;
-                        }
-                    }
-                }
-            }
+            game = new Game(Color.White);
+            //game.Board[5, 2].Type = Type.King;//спавн тестовой дамки
+            //game.Board[3, 4].Type = PieceType.King;
+            //game.Board[3, 4].Color = PlayerColor.Black;
+            //game.Board[2, 5].Type = Type.None;
+            //game.Board[2, 5].Color = Color.None;
+            //game.Board[3, 4].Type = Type.King;
+            //game.Board[3, 4].Color = Color.Black;
             UpdateVisualBoard();
 
             
@@ -78,7 +58,91 @@ namespace Shashki
         private void Cell_Click(object sender, EventArgs e)
         {
             var cellPosition = (Point)((PictureBox)sender).Tag;
-            MessageBox.Show(cellPosition.ToString() + board[cellPosition.Y, cellPosition.X].Color.ToString() + board[cellPosition.Y, cellPosition.X].Type.ToString());
+            //MessageBox.Show(cellPosition.ToString() + game.Board[cellPosition.Y, cellPosition.X].Color.ToString() + game.Board[cellPosition.Y, cellPosition.X].Type.ToString());
+            //MessageBox.Show(game.isAbleToTake(cellPosition.X, cellPosition.Y, cellPosition.X+3, cellPosition.Y-3).ToString());
+            switch (game.Status) {
+                case GameStatus.AbleToMove:
+                    if (SelectedCell.X == -1 && game.isAbleToMove(cellPosition.X, cellPosition.Y))
+                    {
+                        InfoLabel.Text = "Ходите";
+                        SelectedCell = new Point(cellPosition.X, cellPosition.Y);
+                        var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
+                        visualCell.BorderStyle = BorderStyle.Fixed3D;
+                    }
+                    else if (SelectedCell.X != -1 && game.Move(SelectedCell.X, SelectedCell.Y, cellPosition.X, cellPosition.Y))
+                    {
+                        InfoLabel.Text = game.Player == Color.White ? "Ход чёрных" : "Ход белых";
+                        var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
+                        visualCell.BorderStyle = BorderStyle.None;
+                        SelectedCell.X = -1;
+                        SelectedCell.Y = -1;
+                        UpdateVisualBoard();
+                    }
+                    else InfoLabel.Text = "Так походить не получится!";
+                        break;
+                case GameStatus.HaveToTake:
+                    if (SelectedCell.X == -1 && game.isAbleToTake(cellPosition.X, cellPosition.Y))
+                    {
+                        InfoLabel.Text = "Бейте";
+                        SelectedCell = new Point(cellPosition.X, cellPosition.Y);
+                        var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
+                        visualCell.BorderStyle = BorderStyle.Fixed3D;
+                    }
+                    else if (SelectedCell.X != -1 && game.Take(SelectedCell.X, SelectedCell.Y, cellPosition.X, cellPosition.Y))
+                    {
+                        InfoLabel.Text = "";
+                        var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
+                        visualCell.BorderStyle = BorderStyle.None;
+                        if (game.Status == GameStatus.ContinueToTake)
+                        {
+                            SelectedCell.X = cellPosition.X;
+                            SelectedCell.Y = cellPosition.Y;
+                            visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
+                            visualCell.BorderStyle = BorderStyle.Fixed3D;
+                        }
+                        else
+                        {
+                            InfoLabel.Text = game.Player == Color.White ? "Ход чёрных" : "Ход белых";
+                            SelectedCell.X = -1;
+                            SelectedCell.Y = -1;
+                        }
+                        UpdateVisualBoard();
+                    }
+                    else InfoLabel.Text = "Так побить не получится!";
+                    break;
+                case GameStatus.ContinueToTake:
+                    if (SelectedCell.X == -1 && game.isAbleToTake(cellPosition.X, cellPosition.Y))
+                    {
+                        InfoLabel.Text = "Бейте";
+                        SelectedCell = new Point(cellPosition.X, cellPosition.Y);
+                        var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
+                        visualCell.BorderStyle = BorderStyle.Fixed3D;
+                    }
+                    else if (SelectedCell.X != -1 && game.Take(SelectedCell.X, SelectedCell.Y, cellPosition.X, cellPosition.Y))
+                    {
+                        InfoLabel.Text = "";
+                        var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
+                        visualCell.BorderStyle = BorderStyle.None;
+                        if (game.Status == GameStatus.ContinueToTake)
+                        {
+                            SelectedCell.X = cellPosition.X;
+                            SelectedCell.Y = cellPosition.Y;
+                            visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
+                            visualCell.BorderStyle = BorderStyle.Fixed3D;
+                        }
+                        else
+                        {
+                            InfoLabel.Text = game.Player == Color.White ? "Ход чёрных" : "Ход белых";
+                            SelectedCell.X = -1;
+                            SelectedCell.Y = -1;
+                        }
+                        UpdateVisualBoard();
+                    }
+                    else InfoLabel.Text = "Так побить не получится!";
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void UpdateVisualBoard()
@@ -88,8 +152,8 @@ namespace Shashki
             {
                 for (int col = 0; col < 8; col++)
                 {
-                    var cell = board[row, col];
-                    var visualCell = cellReferences[row, col];
+                    var cell = game.Board[col, row];
+                    var visualCell = cellReferences[col, row];
                     if ((row + col) % 2 == 0)
                     {
                         visualCell.Image = Properties.Resources.WhiteEmpty;
@@ -98,11 +162,11 @@ namespace Shashki
                     {
                         switch (cell.Color)
                         {
-                            case PlayerColor.White:
-                                visualCell.Image = cell.Type == PieceType.King ? Properties.Resources.BlackWhiteKing : Properties.Resources.BlackWhiteMan;
+                            case Color.White:
+                                visualCell.Image = cell.Type == Type.King ? Properties.Resources.BlackWhiteKing : Properties.Resources.BlackWhiteMan;
                                 break;
-                            case PlayerColor.Black:
-                                visualCell.Image = cell.Type == PieceType.King ? Properties.Resources.BlackBlackKing : Properties.Resources.BlackBlackMan;
+                            case Color.Black:
+                                visualCell.Image = cell.Type == Type.King ? Properties.Resources.BlackBlackKing : Properties.Resources.BlackBlackMan;
                                 break;
                             default:
                                 visualCell.Image = Properties.Resources.BlackEmpty;
