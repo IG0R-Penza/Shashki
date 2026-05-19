@@ -72,6 +72,7 @@
             this.GameControlBtn.TabIndex = 1;
             this.GameControlBtn.Text = "Начать игру";
             this.GameControlBtn.UseVisualStyleBackColor = true;
+            this.GameControlBtn.Click += new System.EventHandler(this.GameControlBtn_Click);
             // 
             // InfoLabel
             // 

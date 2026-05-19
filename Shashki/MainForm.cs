@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Shashki
@@ -8,13 +9,25 @@ namespace Shashki
     {
         private PictureBox[,] cellReferences = new PictureBox[8, 8];
 
-        private Game game;
+        public ICommunicator Communicator { get; set; }
+        public Game Game { get; set; }
 
         private Point SelectedCell = new Point(-1, -1);
+
+        public bool gameStarted { get; set; }
+
+        private InfoPrinter infoPrinter;
 
         public MainForm()
         {
             InitializeComponent();
+            gameStarted = false;
+            infoPrinter = new InfoPrinter(PrintInfo);
+        }
+
+        private void PrintInfo(string info)
+        {
+            InfoLabel.Text = info;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -25,7 +38,6 @@ namespace Shashki
             {
                 for (int j = 0; j < 8; j++)
                 {
-                    //Image image = (i+j)%2==0 ? Properties.Resources.WhiteEmpty : Properties.Resources.BlackEmpty;
                     var cell = new PictureBox
                     {
                         Dock = DockStyle.Fill,
@@ -34,7 +46,6 @@ namespace Shashki
                         SizeMode = PictureBoxSizeMode.StretchImage,
                         BackColor = System.Drawing.Color.Transparent,
                         Tag = new Point(j, i)
-                        //Image = image
                     };
                     cell.Click += Cell_Click;
                     cellReferences[i, j] = cell;
@@ -42,58 +53,52 @@ namespace Shashki
                 }
             }
 
-            game = new Game(Color.White);
-            //game.Board[5, 2].Type = Type.King;//спавн тестовой дамки
-            //game.Board[3, 4].Type = PieceType.King;
-            //game.Board[3, 4].Color = PlayerColor.Black;
-            //game.Board[2, 5].Type = Type.None;
-            //game.Board[2, 5].Color = Color.None;
-            //game.Board[3, 4].Type = Type.King;
-            //game.Board[3, 4].Color = Color.Black;
+            Game = new Game(Color.White);
             UpdateVisualBoard();
 
-            
+            BoardTable.Enabled = false;
         }
 
-        private void Cell_Click(object sender, EventArgs e)
+        private async void Cell_Click(object sender, EventArgs e)
         {
             var cellPosition = (Point)((PictureBox)sender).Tag;
-            //MessageBox.Show(cellPosition.ToString() + game.Board[cellPosition.Y, cellPosition.X].Color.ToString() + game.Board[cellPosition.Y, cellPosition.X].Type.ToString());
-            //MessageBox.Show(game.isAbleToTake(cellPosition.X, cellPosition.Y, cellPosition.X+3, cellPosition.Y-3).ToString());
-            switch (game.Status) {
+            switch (Game.Status) {
                 case GameStatus.AbleToMove:
-                    if (SelectedCell.X == -1 && game.isAbleToMove(cellPosition.X, cellPosition.Y))
+                    if (SelectedCell.X == -1 && Game.isAbleToMove(cellPosition.X, cellPosition.Y))
                     {
-                        InfoLabel.Text = "Ходите";
+                        InfoLabel.Invoke(infoPrinter, "Ходите");
                         SelectedCell = new Point(cellPosition.X, cellPosition.Y);
                         var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
                         visualCell.BorderStyle = BorderStyle.Fixed3D;
                     }
-                    else if (SelectedCell.X != -1 && game.Move(SelectedCell.X, SelectedCell.Y, cellPosition.X, cellPosition.Y))
+                    else if (SelectedCell.X != -1 && Game.Move(SelectedCell.X, SelectedCell.Y, cellPosition.X, cellPosition.Y))
                     {
-                        InfoLabel.Text = game.Player == Color.White ? "Ход чёрных" : "Ход белых";
+                        InfoLabel.Invoke(infoPrinter, Game.Player == Color.White ? "Ход чёрных" : "Ход белых");
                         var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
                         visualCell.BorderStyle = BorderStyle.None;
                         SelectedCell.X = -1;
                         SelectedCell.Y = -1;
                         UpdateVisualBoard();
+                        setUiEnable(false);
+                        await Task.Run(() => Communicator.SendMessageAsync(new TurnDTO(TurnStatus.MOVE, Game.Board)));
                     }
-                    else InfoLabel.Text = "Так походить не получится!";
+                    else InfoLabel.Invoke(infoPrinter, "Так походить не получится!");
                         break;
                 case GameStatus.HaveToTake:
-                    if (SelectedCell.X == -1 && game.isAbleToTake(cellPosition.X, cellPosition.Y))
+                    if (SelectedCell.X == -1 && Game.isAbleToTake(cellPosition.X, cellPosition.Y))
                     {
-                        InfoLabel.Text = "Бейте";
+                        InfoLabel.Invoke(infoPrinter, "Бейте");
                         SelectedCell = new Point(cellPosition.X, cellPosition.Y);
                         var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
                         visualCell.BorderStyle = BorderStyle.Fixed3D;
                     }
-                    else if (SelectedCell.X != -1 && game.Take(SelectedCell.X, SelectedCell.Y, cellPosition.X, cellPosition.Y))
+                    else if (SelectedCell.X != -1 && Game.Take(SelectedCell.X, SelectedCell.Y, cellPosition.X, cellPosition.Y))
                     {
-                        InfoLabel.Text = "";
+                        InfoLabel.Invoke(infoPrinter, "");
                         var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
                         visualCell.BorderStyle = BorderStyle.None;
-                        if (game.Status == GameStatus.ContinueToTake)
+                        UpdateVisualBoard();
+                        if (Game.Status == GameStatus.ContinueToTake)
                         {
                             SelectedCell.X = cellPosition.X;
                             SelectedCell.Y = cellPosition.Y;
@@ -102,28 +107,29 @@ namespace Shashki
                         }
                         else
                         {
-                            InfoLabel.Text = game.Player == Color.White ? "Ход чёрных" : "Ход белых";
+                            InfoLabel.Invoke(infoPrinter, Game.Player == Color.White ? "Ход чёрных" : "Ход белых");
                             SelectedCell.X = -1;
                             SelectedCell.Y = -1;
+                            await Task.Run(()=>Communicator.SendMessageAsync(new TurnDTO(TurnStatus.MOVE, Game.Board)));
                         }
-                        UpdateVisualBoard();
                     }
-                    else InfoLabel.Text = "Так побить не получится!";
+                    else InfoLabel.Invoke(infoPrinter, "Так побить не получится!");
                     break;
                 case GameStatus.ContinueToTake:
-                    if (SelectedCell.X == -1 && game.isAbleToTake(cellPosition.X, cellPosition.Y))
+                    if (SelectedCell.X == -1 && Game.isAbleToTake(cellPosition.X, cellPosition.Y))
                     {
-                        InfoLabel.Text = "Бейте";
+                        InfoLabel.Invoke(infoPrinter, "Бейте");
                         SelectedCell = new Point(cellPosition.X, cellPosition.Y);
                         var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
                         visualCell.BorderStyle = BorderStyle.Fixed3D;
                     }
-                    else if (SelectedCell.X != -1 && game.Take(SelectedCell.X, SelectedCell.Y, cellPosition.X, cellPosition.Y))
+                    else if (SelectedCell.X != -1 && Game.Take(SelectedCell.X, SelectedCell.Y, cellPosition.X, cellPosition.Y))
                     {
-                        InfoLabel.Text = "";
+                        InfoLabel.Invoke(infoPrinter, "Бейте");
                         var visualCell = cellReferences[SelectedCell.Y, SelectedCell.X];
                         visualCell.BorderStyle = BorderStyle.None;
-                        if (game.Status == GameStatus.ContinueToTake)
+                        UpdateVisualBoard();
+                        if (Game.Status == GameStatus.ContinueToTake)
                         {
                             SelectedCell.X = cellPosition.X;
                             SelectedCell.Y = cellPosition.Y;
@@ -132,13 +138,13 @@ namespace Shashki
                         }
                         else
                         {
-                            InfoLabel.Text = game.Player == Color.White ? "Ход чёрных" : "Ход белых";
+                            InfoLabel.Invoke(infoPrinter, Game.Player == Color.White ? "Ход чёрных" : "Ход белых");
                             SelectedCell.X = -1;
                             SelectedCell.Y = -1;
+                            await Task.Run(() => Communicator.SendMessageAsync(new TurnDTO(TurnStatus.MOVE, Game.Board)));
                         }
-                        UpdateVisualBoard();
                     }
-                    else InfoLabel.Text = "Так побить не получится!";
+                    else InfoLabel.Invoke(infoPrinter, "Так побить не получится!");
                     break;
                 default:
                     break;
@@ -152,7 +158,7 @@ namespace Shashki
             {
                 for (int col = 0; col < 8; col++)
                 {
-                    var cell = game.Board[col, row];
+                    var cell = Game.Board[col, row];
                     var visualCell = cellReferences[col, row];
                     if ((row + col) % 2 == 0)
                     {
@@ -177,11 +183,123 @@ namespace Shashki
             }
         }
 
+        private async void onMessageReceived(object sender, TurnDTO message)
+        {
+            Game.Board = message.board;
+            Game.InvertBoard();
+            UpdateVisualBoard();
+            switch (message.status)
+            {
+                case TurnStatus.MOVE:
+                    Game.updateStatus();
+                    if (Game.Status == GameStatus.Lose)
+                    {
+                        
+                        BoardTable.Enabled = false;
+                        gameStarted = false;
+                        GameControlBtn.Enabled = true;
+                        GameControlBtn.Text = "Начать игру";
+                        InfoLabel.Invoke(infoPrinter, "Вы проиграли!");
+                        await Task.Run(()=>Communicator.SendMessageAsync(new TurnDTO(TurnStatus.LOSE, Game.Board)));
+                        try
+                        {
+                            if (Communicator is Server) await ((Server)Communicator).StopAsync();
+                        }
+                        catch { }
+                    }
+                    else
+                    {
+                        InfoLabel.Invoke(infoPrinter, "Ваш ход");
+                        setUiEnable(true);
+                    }
+                    break;
+                case TurnStatus.LOSE:
+                    
+                    BoardTable.Enabled = false;
+                    gameStarted = false;
+                    GameControlBtn.Enabled = true;
+                    GameControlBtn.Text = "Начать игру";
+                    InfoLabel.Invoke(infoPrinter, "Вы победили!");
+                    try
+                    {
+                        if (Communicator is Server) await ((Server)Communicator).StopAsync();
+                    }
+                    catch { }
+                    break;
+                case TurnStatus.GIVEUP:
+                    
+                    BoardTable.Enabled = false;
+                    gameStarted = false;
+                    GameControlBtn.Enabled = true;
+                    GameControlBtn.Text = "Начать игру";
+                    InfoLabel.Invoke(infoPrinter, "Соперник сдался!");
+                    try
+                    {
+                        if (Communicator is Server) await ((Server)Communicator).StopAsync();
+                    }
+                    catch { }
+                    break;
+                default:
+                    break;
+            }
+        }
+
         private void MainForm_Resize(object sender, EventArgs e)
         {
             int minSize = Math.Min(this.Size.Width - 104, this.Size.Height - 120) / 8 * 8;
             BoardTable.Size = new Size(minSize, minSize);
             BoardTable.Location = new Point((this.ClientSize.Width - minSize) / 2, 20);
         }
+
+        private async void GameControlBtn_Click(object sender, EventArgs e)
+        {
+            if (!gameStarted)
+            {
+                ConnectionForm connectionForm = new ConnectionForm(this);
+                connectionForm.ShowDialog();
+                if (gameStarted)
+                {
+                    Communicator.OnMessageReceived += onMessageReceived;
+                    UpdateVisualBoard();
+                    GameControlBtn.Text = "Сдаться";
+                    setUiEnable(Game.Player == Color.White);
+                    InfoLabel.Invoke(infoPrinter, Game.Player == Color.White ? "Ваш ход" : "Ход белых");
+                }
+            }
+            else
+            {
+                var dialogRes = MessageBox.Show(
+                    "Вы уверены, что хотите сдаться?",
+                    "Сдаться",
+                     MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information,
+                        MessageBoxDefaultButton.Button1,
+                        MessageBoxOptions.DefaultDesktopOnly);
+                if (dialogRes == DialogResult.Yes)
+                {
+                    BoardTable.Enabled = false;
+                    gameStarted = false;
+                    GameControlBtn.Enabled = true;
+                    GameControlBtn.Text = "Начать игру";
+                    InfoLabel.Invoke(infoPrinter, "Вы сдались!");
+                    await Task.Run(() => Communicator.SendMessageAsync(new TurnDTO(TurnStatus.GIVEUP, Game.Board)));
+                    try
+                    {
+                        if (Communicator is Server) await ((Server)Communicator).StopAsync();
+                    }
+                    catch { }
+                }
+            }
+            
+        }
+
+        private void setUiEnable(bool enable)
+        {
+            BoardTable.Enabled=enable;
+            GameControlBtn.Enabled=enable;
+        }
     }
+
+    delegate void InfoPrinter(string info);
+    delegate void UiEnabler(bool enable);
 }

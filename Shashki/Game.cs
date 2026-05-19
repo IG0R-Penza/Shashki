@@ -1,26 +1,17 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 
 namespace Shashki
 {
     public class Game
     {
-        public CellState[,] Board { get; private set; }
+        public CellState[,] Board { get; set; }
 
         public Color Player {  get; }
         
         public GameStatus Status { get; private set; }
 
         private Point TakingChecker { get; set; }
-        /*TODO:
-         * проверка возможности хода
-         * проверка возможности атаки
-         * как следствие - проверка победы/гамовера через наличие шашек цвета и возможности хода хотя бы одной (добавить статус победы?)
-         * собственно ход и атака
-         * стать дамкой
-         * зафук или запрет хода?
-         */
 
         public Game(Color player) {
             Player = player;
@@ -50,6 +41,7 @@ namespace Shashki
             if (Player == Color.Black)
             {
                 InvertBoard();
+                Status = GameStatus.Turn;
             }
         }
 
@@ -177,7 +169,7 @@ namespace Shashki
                 current.Color = Color.None;
                 current.Type = Type.None;
                 Status = GameStatus.Turn;
-                if (dest_row == 7) Board[dest_row, dest_col].Type = Type.King;
+                if (dest_row == 0) Board[dest_row, dest_col].Type = Type.King;
                 return true;
             }
             else return false;
@@ -208,7 +200,7 @@ namespace Shashki
                     }
                 }
 
-                if (dest_row == 7) Board[dest_row, dest_col].Type = Type.King;
+                if (dest_row == 0) Board[dest_row, dest_col].Type = Type.King;
 
                 if (isAbleToTake(dest_col, dest_row))
                 {
