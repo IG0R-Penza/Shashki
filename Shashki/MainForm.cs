@@ -5,15 +5,35 @@ using System.Windows.Forms;
 
 namespace Shashki
 {
+    /// <summary>
+    /// Главная форма, содержит игровое поле
+    /// </summary>
     public partial class MainForm : Form
     {
+        /// <summary>
+        /// Ссылки на PictureBox, помещённые в TableLayoutPanel.
+        /// Обращение к элементу через сам TableLayoutPanel вызывает nullReferenceException в mono
+        /// </summary>
         private PictureBox[,] cellReferences = new PictureBox[8, 8];
 
+        /// <summary>
+        /// Объект для сетевого взаимодействия
+        /// </summary>
         public ICommunicator Communicator { get; set; }
+        
+        /// <summary>
+        /// Игра
+        /// </summary>
         public Game Game { get; set; }
 
+        /// <summary>
+        /// Координаты выбранной клетки
+        /// </summary>
         private Point SelectedCell = new Point(-1, -1);
 
+        /// <summary>
+        /// Флаг начала игры
+        /// </summary>
         public bool gameStarted { get; set; }
 
         private InfoPrinter infoPrinter;
@@ -25,11 +45,20 @@ namespace Shashki
             infoPrinter = new InfoPrinter(PrintInfo);
         }
 
+        /// <summary>
+        /// Вывод информации о ходе игры
+        /// </summary>
+        /// <param name="info"></param>
         private void PrintInfo(string info)
         {
             InfoLabel.Text = info;
         }
 
+        /// <summary>
+        /// Обработчик загрузки формы, заполняет доску TableLayoutPanel клетками PictureBox
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MainForm_Load(object sender, EventArgs e)
         {
             if (BoardTable == null) return;
@@ -57,8 +86,16 @@ namespace Shashki
             UpdateVisualBoard();
 
             BoardTable.Enabled = false;
+
+            HelloForm helloform = new HelloForm();
+            helloform.ShowDialog();
         }
 
+        /// <summary>
+        /// Обработчик клика по клетке игрового поля
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void Cell_Click(object sender, EventArgs e)
         {
             var cellPosition = (Point)((PictureBox)sender).Tag;
@@ -151,6 +188,9 @@ namespace Shashki
             }
         }
 
+        /// <summary>
+        /// Переотрисовка игрового поля
+        /// </summary>
         private void UpdateVisualBoard()
         {
 
@@ -183,6 +223,11 @@ namespace Shashki
             }
         }
 
+        /// <summary>
+        /// Обработчик события получения сообщения
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="message"></param>
         private async void onMessageReceived(object sender, TurnDTO message)
         {
             Game.Board = message.board;
@@ -244,6 +289,11 @@ namespace Shashki
             }
         }
 
+        /// <summary>
+        /// Обработчик события изменения размеров формы, масштабирующий игровое поле
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MainForm_Resize(object sender, EventArgs e)
         {
             int minSize = Math.Min(this.Size.Width - 104, this.Size.Height - 120) / 8 * 8;
@@ -251,6 +301,11 @@ namespace Shashki
             BoardTable.Location = new Point((this.ClientSize.Width - minSize) / 2, 20);
         }
 
+        /// <summary>
+        /// Обработчик нажатия кнопки управления игрой (начать игру, сдаться)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void GameControlBtn_Click(object sender, EventArgs e)
         {
             if (!gameStarted)
@@ -293,6 +348,10 @@ namespace Shashki
             
         }
 
+        /// <summary>
+        /// Установка возможности взаимодействия с интерфейсом
+        /// </summary>
+        /// <param name="enable">Возможность взаимодействия с интерфейсом</param>
         private void setUiEnable(bool enable)
         {
             BoardTable.Enabled=enable;
@@ -301,5 +360,4 @@ namespace Shashki
     }
 
     delegate void InfoPrinter(string info);
-    delegate void UiEnabler(bool enable);
 }

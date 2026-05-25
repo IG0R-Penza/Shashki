@@ -3,16 +3,35 @@ using System.Drawing;
 
 namespace Shashki
 {
+    /// <summary>
+    /// Класс игры
+    /// </summary>
     public class Game
     {
+        /// <summary>
+        /// Игровое поле
+        /// </summary>
         public CellState[,] Board { get; set; }
 
+        /// <summary>
+        /// Цвет игрока
+        /// </summary>
         public Color Player {  get; }
         
+        /// <summary>
+        /// Статус хода (может походить, должен побить, должен продолжить бить, проиграл и не может ни походить, ни побить)
+        /// </summary>
         public GameStatus Status { get; private set; }
 
+        /// <summary>
+        /// Координаты шашки, которой следует продолжить серию взятий при возможности
+        /// </summary>
         private Point TakingChecker { get; set; }
 
+        /// <summary>
+        /// Создаёт игру с начальным состоянием поля для игрока заданного цвета
+        /// </summary>
+        /// <param name="player">Цвет игрока</param>
         public Game(Color player) {
             Player = player;
             Status = GameStatus.AbleToMove;
@@ -45,6 +64,9 @@ namespace Shashki
             }
         }
 
+        /// <summary>
+        /// Переворачивает доску
+        /// </summary>
         public void InvertBoard()
         {
             CellState[,] board_copy = Board;
@@ -58,6 +80,14 @@ namespace Shashki
             }
         }
 
+        /// <summary>
+        /// Проверяет возможность перемещения выбранной шашки в выбранную клетку
+        /// </summary>
+        /// <param name="current_col">Текущий столбец доски</param>
+        /// <param name="current_row">Текущий ряд доски</param>
+        /// <param name="dest_col">Столбец клетки назначения</param>
+        /// <param name="dest_row">Ряд клетки назначения</param>
+        /// <returns>Возможность хода</returns>
         public bool isAbleToMoveTo(int current_col, int current_row, int dest_col, int dest_row)
         {
             if (dest_col < 0 || dest_row < 0 || dest_col > 7 || dest_row > 7) return false;
@@ -82,10 +112,24 @@ namespace Shashki
             return false;
         }
 
+        /// <summary>
+        /// Проверяет возможность хода для выбранной шашки вообще
+        /// </summary>
+        /// <param name="col">Столбец выбранной шашки</param>
+        /// <param name="row">Ряд выбранной шашки</param>
+        /// <returns>Возможность хода</returns>
         public bool isAbleToMove(int col, int row) {
             return isAbleToMoveTo(col, row, col+1, row+1) || isAbleToMoveTo(col, row, col + 1, row - 1) || isAbleToMoveTo(col, row, col - 1, row + 1) || isAbleToMoveTo(col, row, col - 1, row - 1);
         }
 
+        /// <summary>
+        /// Проверяет возможность взятия шашки соперника с последующим перемещением выбранной шашки в выбранную клетку
+        /// </summary>
+        /// <param name="current_col">Текущий столбец доски</param>
+        /// <param name="current_row">Текущий ряд доски</param>
+        /// <param name="dest_col">Столбец клетки назначения</param>
+        /// <param name="dest_row">Ряд клетки назначения</param>
+        /// <returns>Возможность взятия</returns>
         public bool isAbleToTake(int current_col, int current_row, int dest_col, int dest_row)
         {
             if (dest_col < 0 || dest_row < 0 || dest_col > 7 || dest_row > 7) return false;
@@ -113,6 +157,12 @@ namespace Shashki
             return false;
         }
 
+        /// <summary>
+        /// Проверяет возможность взятия шашки соперника для выбранной шашки вообще
+        /// </summary>
+        /// <param name="col">Столбец выбранной шашки</param>
+        /// <param name="row">Ряд выбранной шашки</param>
+        /// <returns>Возможность взятия</returns>
         public bool isAbleToTake(int current_col, int current_row)
         {
             if (Board[current_row, current_col].Color != Player) return false;
@@ -132,6 +182,9 @@ namespace Shashki
             return false;
         }
 
+        /// <summary>
+        /// Обновляет статус хода
+        /// </summary>
         public void updateStatus()
         {
             bool hasMovable = false;
@@ -159,6 +212,14 @@ namespace Shashki
             else Status = GameStatus.Lose;
         }
 
+        /// <summary>
+        /// Перемещает выбранную шашку в выбранную клетку
+        /// </summary>
+        /// <param name="current_col">Текущий столбец доски</param>
+        /// <param name="current_row">Текущий ряд доски</param>
+        /// <param name="dest_col">Столбец клетки назначения</param>
+        /// <param name="dest_row">Ряд клетки назначения</param>
+        /// <returns>Удалось ли походить</returns>
         public bool Move(int current_col, int current_row, int dest_col, int dest_row)
         {
             if (Status == GameStatus.AbleToMove && isAbleToMoveTo(current_col, current_row, dest_col, dest_row))
@@ -175,6 +236,14 @@ namespace Shashki
             else return false;
         }
 
+        /// <summary>
+        /// Перемещает выбранную шашку в выбранную клетку, осуществляя взятие шашки соперника
+        /// </summary>
+        /// <param name="current_col">Текущий столбец доски</param>
+        /// <param name="current_row">Текущий ряд доски</param>
+        /// <param name="dest_col">Столбец клетки назначения</param>
+        /// <param name="dest_row">Ряд клетки назначения</param>
+        /// <returns>Удалось ли взять шашку соперника</returns>
         public bool Take(int current_col, int current_row, int dest_col, int dest_row)
         {
             if ((Status == GameStatus.HaveToTake || Status == GameStatus.ContinueToTake) && isAbleToTake(current_col, current_row, dest_col, dest_row))
@@ -218,13 +287,34 @@ namespace Shashki
         }
     }
 
+    /// <summary>
+    /// Тип фигуры в клетке (пустая клетка, пешка, дамка)
+    /// </summary>
     public enum Type { None, Man, King }
+
+    /// <summary>
+    /// Цвет фигуры в клетке (пустая клетка, белая шашка, чёрная шашка)
+    /// </summary>
     public enum Color { None, White, Black }
+
+    /// <summary>
+    /// Статус хода (может ходить, должен взять шашку соперника, должен продолжить взятие шашек, проиграл и не может ни ходить, ни бить)
+    /// </summary>
     public enum GameStatus { AbleToMove, HaveToTake, ContinueToTake, Turn, Lose }
 
+    /// <summary>
+    /// Класс клетки игрового поля
+    /// </summary>
     public class CellState
     {
+        /// <summary>
+        /// Тип фигуры в клетке
+        /// </summary>
         public Type Type { get; set; } = Type.None;
+
+        /// <summary>
+        /// Цвет фигуры в клетке
+        /// </summary>
         public Color Color { get; set; } = Color.None;
     }
 

@@ -9,24 +9,63 @@ using System.Windows.Forms;
 
 namespace Shashki
 {
+    /// <summary>
+    /// Интерфейс для сетевого взаимодействия
+    /// </summary>
     public interface ICommunicator
     {
+        /// <summary>
+        /// Асинхронный приём сообщений
+        /// </summary>
+        /// <returns></returns>
         Task ReceiveMessageAsync();
+
+        /// <summary>
+        /// Асинхронная отправка сообщения
+        /// </summary>
+        /// <param name="turn">Состояние игры по результатам хода</param>
+        /// <returns></returns>
         Task SendMessageAsync(TurnDTO turn);
 
+        /// <summary>
+        /// Событие приёма сообщения
+        /// </summary>
         event EventHandler<TurnDTO> OnMessageReceived;
+
+        /// <summary>
+        /// Событие установки соединения
+        /// </summary>
         event EventHandler<Color> OnConnected;
     }
 
+    /// <summary>
+    /// Вебсокет сервер
+    /// </summary>
     public class Server : ICommunicator
     {
+        /// <summary>
+        /// Прослушиватель http для апгрейда до WebSocket
+        /// </summary>
         private HttpListener httpListener;
+
+        /// <summary>
+        /// Обслуживает WebSocket соединение
+        /// </summary>
         private WebSocket webSocket;
 
         public event EventHandler<TurnDTO> OnMessageReceived;
         public event EventHandler<Color> OnConnected;
+
+        /// <summary>
+        /// Событие ошибки "Отказано в доступе", возникающей при необходимости прав Администратора
+        /// </summary>
         public event EventHandler AdminRequired;
 
+        /// <summary>
+        /// Асинхронный запуск сервера
+        /// </summary>
+        /// <param name="color">Цвет игрока-хоста</param>
+        /// <returns>Цвет оппонента</returns>
         public async Task StartAsync(Color color)
         {
             try
@@ -124,6 +163,10 @@ namespace Shashki
             }
         }
 
+        /// <summary>
+        /// Асинхронная остановка сервера
+        /// </summary>
+        /// <returns></returns>
         public async Task StopAsync()
         {
             if (webSocket != null && webSocket.State == WebSocketState.Open)
@@ -140,14 +183,33 @@ namespace Shashki
         }
     }
 
+    /// <summary>
+    /// Вебсокет клиент
+    /// </summary>
     public class Client : ICommunicator
     {
+        /// <summary>
+        /// Обсуживает WebSocket на стороне клиента
+        /// </summary>
         private ClientWebSocket webSocket;
 
         public event EventHandler<TurnDTO> OnMessageReceived;
+
+        /// <summary>
+        /// Событие ошибки соединения
+        /// </summary>
         public event EventHandler<string> OnConnectionError;
+
+        /// <summary>
+        /// Событие подключения
+        /// </summary>
         public event EventHandler<Color> OnConnected;
 
+        /// <summary>
+        /// Асинхронное соединение с сервером по IP-адресу
+        /// </summary>
+        /// <param name="ip">IP-адрес сервер</param>
+        /// <returns></returns>
         public async Task ConnectAsync(string ip)
         {
             string url = "ws://" + ip + ":8080/";
@@ -222,15 +284,6 @@ namespace Shashki
             {
                 await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
             }
-        }
-
-        public async Task DisconnectAsync()
-        {
-            if (webSocket?.State == WebSocketState.Open)
-            {
-                await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Закрытие", CancellationToken.None);
-            }
-            webSocket.Dispose();
         }
     }
 }
