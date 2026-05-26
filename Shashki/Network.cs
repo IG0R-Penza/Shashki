@@ -231,7 +231,8 @@ namespace Shashki
                         }
                         Color color = JsonConvert.DeserializeObject<Color>(Encoding.UTF8.GetString(buffer, 0, result.Count));
                         OnConnected?.Invoke(this, color);
-                        await Task.Run(async () => await ReceiveMessageAsync());
+                        //await Task.Run(async () => await ReceiveMessageAsync()); помогайка???
+                        await Task.Run(() => ReceiveMessageAsync());
                         break;
                     }
                     catch (Exception ex)

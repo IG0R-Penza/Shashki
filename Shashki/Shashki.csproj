@@ -124,25 +124,16 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\BlackBlackKing.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\BlackBlackMan.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\BlackEmpty.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\BlackWhiteKing.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\BlackWhiteMan.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\WhiteEmpty.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="icon.ico" />
+    <None Include="Resources\BlackWhiteMan.png" />
+    <None Include="Resources\BlackWhiteKing.png" />
+    <None Include="Resources\BlackEmpty.png" />
+    <None Include="Resources\BlackBlackMan.png" />
+    <None Include="Resources\BlackBlackKing.png" />
+    <None Include="Resources\BlackBlackKing.bmp" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">

@@ -90,6 +90,7 @@ namespace Shashki
         /// <returns>Возможность хода</returns>
         public bool isAbleToMoveTo(int current_col, int current_row, int dest_col, int dest_row)
         {
+            if (current_col == dest_col && current_row == dest_row) return false;
             if (dest_col < 0 || dest_row < 0 || dest_col > 7 || dest_row > 7) return false;
             if (Board[current_row, current_col].Color != Player) return false;
             if (Board[current_row, current_col].Type == Type.Man && Board[dest_row, dest_col].Type == Type.None)
@@ -132,6 +133,7 @@ namespace Shashki
         /// <returns>Возможность взятия</returns>
         public bool isAbleToTake(int current_col, int current_row, int dest_col, int dest_row)
         {
+            if (current_col == dest_col && current_row == dest_row) return false;
             if (dest_col < 0 || dest_row < 0 || dest_col > 7 || dest_row > 7) return false;
             if (Board[current_row, current_col].Color != Player) return false;
             if (Board[current_row, current_col].Type == Type.Man)
