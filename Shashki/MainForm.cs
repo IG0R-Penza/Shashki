@@ -357,6 +357,26 @@ namespace Shashki
             BoardTable.Enabled=enable;
             GameControlBtn.Enabled=enable;
         }
+
+        /// <summary>
+        /// Завершение партии при закрытии формы
+        /// </summary>
+        private async void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (gameStarted)
+            {
+                e.Cancel = true;
+                await Task.Run(() => Communicator.SendMessageAsync(new TurnDTO(TurnStatus.GIVEUP, Game.Board)));
+                await Task.Delay(500);
+                try
+                {
+                    if (Communicator is Server) await((Server)Communicator).StopAsync();
+                }
+                catch { }
+                gameStarted = false;
+                Close();
+            }
+        }
     }
 
     delegate void InfoPrinter(string info);
