@@ -73,11 +73,11 @@
     <Compile Include="ConnectionForm.Designer.cs">
       <DependentUpon>ConnectionForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="HelloForm.cs">
+    <Compile Include="GreetingForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="HelloForm.Designer.cs">
-      <DependentUpon>HelloForm.cs</DependentUpon>
+    <Compile Include="GreetingForm.Designer.cs">
+      <DependentUpon>GreetingForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Game.cs" />
     <Compile Include="MainForm.cs">
@@ -93,8 +93,8 @@
     <EmbeddedResource Include="ConnectionForm.resx">
       <DependentUpon>ConnectionForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="HelloForm.resx">
-      <DependentUpon>HelloForm.cs</DependentUpon>
+    <EmbeddedResource Include="GreetingForm.resx">
+      <DependentUpon>GreetingForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>

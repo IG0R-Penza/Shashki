@@ -87,7 +87,7 @@ namespace Shashki
 
             BoardTable.Enabled = false;
 
-            HelloForm helloform = new HelloForm();
+            GreetingForm helloform = new GreetingForm();
             helloform.ShowDialog();
         }
 
